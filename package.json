@@ -33,6 +33,7 @@
     "@angular/ssr": "^20.3.4",
     "@primeuix/themes": "^1.2.5",
     "@tailwindcss/postcss": "^4.1.14",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "morgan": "^1.10.1",

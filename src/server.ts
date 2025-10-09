@@ -11,6 +11,7 @@ import { connect, DatabaseError, Result } from 'ts-postgres';
 import { Todo } from './shared/models/todo';
 import { body, validationResult } from 'express-validator';
 import { HttpResponse } from './shared/dtos/response';
+import 'dotenv/config';
 
 function toCamelCase(str: string): string {
   return str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
@@ -29,11 +30,11 @@ function rowsToObjects<T>(result: Result<T>): T[] {
 }
 
 const client = await connect({
-  host: 'localhost',
-  port: 5433,
-  database: 'todo_db',
-  user: 'nguyenbin',
-  password: '09012003a',
+  host: process.env.DB_HOST,
+  port: +process.env.DB_PORT,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
 })
   .then((client) => {
     console.log('Connected to PostgreSQL database');
@@ -56,6 +57,7 @@ const client = await connect({
       })
       .catch((err) => {
         console.error('Failed to create todos table', err);
+        throw err;
       });
 
     // seed data
@@ -71,6 +73,7 @@ const client = await connect({
       })
       .catch((err) => {
         console.error('Failed to insert seed data', err);
+        throw err;
       });
 
     return client;

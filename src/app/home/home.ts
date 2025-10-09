@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, effect } from '@angular/core';
 import { Todo } from '@shared/models/todo';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -39,19 +39,17 @@ export class Home {
   private readonly messageService = inject(MessageService);
   protected readonly todos = signal<Todo[]>([]);
   protected newTodoTitle = signal<string>('');
-  protected loading = signal<boolean>(false);
 
   constructor() {
-    this.loadTodos();
+    effect(() => {
+      this.loadTodos();
+    });
   }
 
   loadTodos() {
-    this.loading.set(true);
     this.httpClient.get<Todo[]>('/api/todos').subscribe({
       next: (todos) => {
-        console.log(todos);
         this.todos.set(todos);
-        this.loading.set(false);
       },
       error: (error) => {
         console.error('Error loading todos:', error);
@@ -60,7 +58,6 @@ export class Home {
           summary: 'Error',
           detail: 'Failed to load todos',
         });
-        this.loading.set(false);
       },
     });
   }
