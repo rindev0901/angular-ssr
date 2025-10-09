@@ -4,18 +4,17 @@
     <div class="flex items-center">
       <p-checkbox
         [inputId]="category.key"
-        name="group"
         [value]="category"
-        [(ngModel)]="selectedCategories"
+        (onChange)="toggleCategory(category)"
       />
       <label [for]="category.key" class="ml-2"> {{ category.name }} </label>
     </div>
     }
 
     <p>These categories are selected:</p>
-    @if(selectedCategories.length) {
+    @if(hasSelectedCategories()) {
     <ul>
-      @for(category of selectedCategories; track category.key) {
+      @for(category of selectedCategories(); track category.key) {
       <li>{{ category.name }}</li>
       }
     </ul>
