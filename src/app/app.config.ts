@@ -13,7 +13,8 @@ import {
   withHttpTransferCacheOptions,
 } from '@angular/platform-browser';
 import Aura from '@primeuix/themes/aura';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { ApiBaseUrlInterceptor } from './interceptor/api-base.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -31,7 +32,7 @@ export const appConfig: ApplicationConfig = {
         includeRequestsWithAuthHeaders: true,
       })
     ),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([ApiBaseUrlInterceptor])),
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {

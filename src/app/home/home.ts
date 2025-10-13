@@ -17,7 +17,7 @@ import { QueryService } from '@app/services/query.service';
 import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, switchMap, timer } from 'rxjs';
 import { ApiResponse } from '@shared/dtos/response';
-
+import { Meta, Title, } from '@angular/platform-browser';
 @Component({
   selector: 'app-home',
   templateUrl: './home.html',
@@ -41,12 +41,21 @@ import { ApiResponse } from '@shared/dtos/response';
 export class Home {
   private readonly httpClient = inject(HttpClient);
   private readonly messageService = inject(MessageService);
+  protected readonly queryService = inject(QueryService);
+  protected readonly titleService = inject(Title);
+  protected readonly metaService = inject(Meta);
   protected readonly todos = signal<Todo[]>([]);
   protected readonly newTodoTitle = signal<string>('');
-  protected readonly queryService = inject(QueryService);
   protected readonly searchTerm = this.queryService.query('search');
 
+  private seo() {
+    this.titleService.setTitle('My angular app');
+    this.metaService.updateTag({ name: 'description', content: 'Description of My angular app' });
+    this.metaService.updateTag({ property: 'og:title', content: 'My angular app' });
+  }
+
   constructor() {
+    this.seo();
     // Setup search with conditional debouncing and switchMap
     toObservable(this.searchTerm)
       .pipe(

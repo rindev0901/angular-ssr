@@ -1,0 +1,219 @@
+<p-toast />
+
+<div
+  class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center py-12 px-4"
+>
+  <div class="w-full max-w-md">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="inline-block p-4 bg-white rounded-full shadow-lg mb-4">
+        <i class="pi pi-user-plus text-5xl text-purple-600"></i>
+      </div>
+      <h1 class="text-4xl font-bold text-gray-800 mb-2">Create Account</h1>
+      <p class="text-gray-600">Join us today and get started!</p>
+    </div>
+
+    <!-- Register Card -->
+    <p-card class="shadow-2xl">
+      <ng-template pTemplate="content">
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <!-- Username Field -->
+          <div class="space-y-2">
+            <label for="username" class="block text-sm font-semibold text-gray-700">
+              Username <span class="text-red-500">*</span>
+            </label>
+            <p-inputgroup>
+              <p-inputgroup-addon>
+                <i class="pi pi-user"></i>
+              </p-inputgroup-addon>
+              <input
+                pInputText
+                id="username"
+                formControlName="username"
+                placeholder="Enter your username"
+                [class.ng-invalid]="
+                  hasError('username', 'required') || hasError('username', 'minlength')
+                "
+                [class.ng-dirty]="registerForm.get('username')?.touched"
+              />
+            </p-inputgroup>
+            @if (hasError('username', 'required') || hasError('username', 'minlength') ||
+            hasError('username', 'maxlength')) {
+            <small class="text-red-500 text-xs">
+              {{ getErrorMessage('username') }}
+            </small>
+            }
+          </div>
+
+          <!-- Email Field -->
+          <div class="space-y-2">
+            <label for="email" class="block text-sm font-semibold text-gray-700">
+              Email Address <span class="text-red-500">*</span>
+            </label>
+            <p-inputgroup>
+              <p-inputgroup-addon>
+                <i class="pi pi-envelope"></i>
+              </p-inputgroup-addon>
+              <input
+                pInputText
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="Enter your email"
+                [class.ng-invalid]="hasError('email', 'required') || hasError('email', 'email')"
+                [class.ng-dirty]="registerForm.get('email')?.touched"
+              />
+            </p-inputgroup>
+            @if (hasError('email', 'required') || hasError('email', 'email')) {
+            <small class="text-red-500 text-xs">
+              {{ getErrorMessage('email') }}
+            </small>
+            }
+          </div>
+
+          <!-- Password Field -->
+          <div class="space-y-2">
+            <label for="password" class="block text-sm font-semibold text-gray-700">
+              Password <span class="text-red-500">*</span>
+            </label>
+            <p-inputgroup>
+              <p-inputgroup-addon>
+                <i class="pi pi-key"></i>
+              </p-inputgroup-addon>
+              <p-password
+                id="password"
+                formControlName="password"
+                placeholder="Enter your password"
+                [toggleMask]="true"
+                [feedback]="true"
+                class="w-full"
+                [inputStyle]="{ width: '100%' }"
+              >
+                <ng-template pTemplate="header">
+                  <h6 class="font-semibold">Pick a password</h6>
+                </ng-template>
+                <ng-template pTemplate="footer">
+                  <p-divider />
+                  <ul class="pl-2 ml-2 mt-0 text-xs" style="line-height: 1.5">
+                    <li>At least one lowercase</li>
+                    <li>At least one uppercase</li>
+                    <li>At least one numeric</li>
+                    <li>Minimum 6 characters</li>
+                  </ul>
+                </ng-template>
+              </p-password>
+            </p-inputgroup>
+
+            @if (hasError('password', 'required') || hasError('password', 'minlength')) {
+            <small class="text-red-500 text-xs">
+              {{ getErrorMessage('password') }}
+            </small>
+            }
+          </div>
+
+          <!-- Confirm Password Field -->
+          <div class="space-y-2">
+            <label for="confirmPassword" class="block text-sm font-semibold text-gray-700">
+              Confirm Password <span class="text-red-500">*</span>
+            </label>
+            <p-inputgroup>
+              <p-inputgroup-addon>
+                <i class="pi pi-key"></i>
+              </p-inputgroup-addon>
+              <p-password
+                id="confirmPassword"
+                formControlName="confirmPassword"
+                placeholder="Confirm your password"
+                [toggleMask]="true"
+                [feedback]="false"
+                class="w-full"
+                [inputStyle]="{ width: '100%' }"
+              />
+            </p-inputgroup>
+            @if (hasError('confirmPassword', 'required') || hasError('confirmPassword',
+            'passwordMismatch')) {
+            <small class="text-red-500 text-xs">
+              {{ getErrorMessage('confirmPassword') }}
+            </small>
+            }
+          </div>
+
+          <!-- Terms & Conditions -->
+          <div class="flex items-start gap-3">
+            <p-checkbox formControlName="agreeTerms" [binary]="true" inputId="agreeTerms" />
+            <label for="agreeTerms" class="text-sm text-gray-700 cursor-pointer">
+              I agree to the
+              <a href="/terms" class="text-purple-600 hover:underline font-semibold"
+                >Terms and Conditions</a
+              >
+              and
+              <a href="/privacy" class="text-purple-600 hover:underline font-semibold"
+                >Privacy Policy</a
+              >
+              <span class="text-red-500">*</span>
+            </label>
+          </div>
+          @if (hasError('agreeTerms', 'required')) {
+          <small class="text-red-500 text-xs block -mt-2">
+            You must agree to the terms and conditions
+          </small>
+          }
+
+          <!-- Submit Button -->
+          <div class="pt-4 flex justify-center">
+            <p-button
+              type="submit"
+              label="Create Account"
+              icon="pi pi-user-plus"
+              [loading]="isLoading()"
+              [disabled]="isLoading()"
+              severity="success"
+            />
+          </div>
+
+          <!-- Divider -->
+          <p-divider align="center">
+            <span class="text-gray-500 text-sm">OR</span>
+          </p-divider>
+
+          <!-- Social Login Buttons -->
+          <div class="space-y-3 space-x-3">
+            <p-button
+              label="Sign up with Google"
+              icon="pi pi-google"
+              class="w-full"
+              severity="secondary"
+              [outlined]="true"
+            />
+            <p-button
+              label="Sign up with GitHub"
+              icon="pi pi-github"
+              class="w-full"
+              severity="secondary"
+              [outlined]="true"
+            />
+          </div>
+        </form>
+      </ng-template>
+
+      <ng-template pTemplate="footer">
+        <div class="text-center pt-4 border-t">
+          <p class="text-sm text-gray-600">
+            Already have an account?
+            <a routerLink="/login" class="text-purple-600 hover:underline font-semibold ml-1">
+              Sign in here
+            </a>
+          </p>
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- Security Notice -->
+    <div class="mt-6 text-center">
+      <p class="text-xs text-gray-500 flex items-center justify-center gap-2">
+        <i class="pi pi-shield text-green-500"></i>
+        Your information is secure and encrypted
+      </p>
+    </div>
+  </div>
+</div>

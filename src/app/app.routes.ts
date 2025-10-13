@@ -3,6 +3,8 @@ import { About } from './about/about';
 import { Home } from './home/home';
 import { Test } from './test/test';
 import { Filter } from './filter/filter';
+import { Register } from './register/register';
+import { Login } from './login/login';
 
 export const routes: Routes = [
   {
@@ -21,4 +23,12 @@ export const routes: Routes = [
     path: 'filter',
     component: Filter,
   },
+  {
+    path: 'register',
+    component: Register,
+  },
+  {
+    path: 'login',
+    component: Login,
+  }
 ];
