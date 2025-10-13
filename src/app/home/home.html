@@ -82,7 +82,15 @@
     </p-card>
 
     <!-- Todos List -->
-    <div class="space-y-4">
+    <div class="flex flex-col space-y-4">
+      <input
+        pInputText
+        type="text"
+        class="self-end"
+        placeholder="Typing for search"
+        [value]="searchTerm()"
+        (input)="searchTermFn($event)"
+      />
       @for (todo of todos(); track todo.id) {
       <p-card
         [class]="

@@ -13,6 +13,41 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nguyenbin -d todo_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app-network
+
+  angular-ssr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: angular-ssr
+    container_name: angular-ssr-app
+    ports:
+      - "4000:4000"
+    environment:
+      # Connect to PostgreSQL in same Docker network
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: todo_db
+      DB_USER: nguyenbin
+      DB_PASSWORD: 09012003a
+      PORT: 4000
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   db_data:

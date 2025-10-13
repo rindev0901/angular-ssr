@@ -1,5 +1,5 @@
-import { HttpClient } from '@angular/common/http';
-import { Component, signal, inject, effect } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Component, signal, inject } from '@angular/core';
 import { Todo } from '@shared/models/todo';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -13,6 +13,10 @@ import { ChipModule } from 'primeng/chip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
+import { QueryService } from '@app/services/query.service';
+import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, switchMap, timer } from 'rxjs';
+import { ApiResponse } from '@shared/dtos/response';
 
 @Component({
   selector: 'app-home',
@@ -38,28 +42,71 @@ export class Home {
   private readonly httpClient = inject(HttpClient);
   private readonly messageService = inject(MessageService);
   protected readonly todos = signal<Todo[]>([]);
-  protected newTodoTitle = signal<string>('');
+  protected readonly newTodoTitle = signal<string>('');
+  protected readonly queryService = inject(QueryService);
+  protected readonly searchTerm = this.queryService.query('search');
 
   constructor() {
-    effect(() => {
-      this.loadTodos();
-    });
+    // Setup search with conditional debouncing and switchMap
+    toObservable(this.searchTerm)
+      .pipe(
+        distinctUntilChanged(), // Only emit when value actually changes
+        switchMap((query) => {
+          const hasQuery = (query as string).trim().length > 0;
+          // If has search query, debounce; otherwise load immediately
+          return hasQuery
+            ? timer(300).pipe(switchMap(() => this.getTodosObservable(query as string)))
+            : this.getTodosObservable(query as string);
+        }),
+        takeUntilDestroyed() // Auto cleanup when component destroys
+      )
+      .subscribe(this.resolveSubscription());
   }
 
-  loadTodos() {
-    this.httpClient.get<Todo[]>('/api/todos').subscribe({
-      next: (todos) => {
+  protected searchTermFn(e: Event): void {
+    const input = e.target as HTMLInputElement;
+    this.queryService.update({ search: input.value });
+  }
+
+  /**
+   * Get todos observable - returns Observable for use with switchMap
+   */
+  private getTodosObservable(query: string = '') {
+    const params = query ? new URLSearchParams({ search: query }) : '';
+    const url = `/api/todos${params ? '?' + params : ''}`;
+    return this.httpClient.get<Todo[]>(url);
+  }
+
+  private resolveSubscription() {
+    return {
+      next: (todos: Todo[]) => {
         this.todos.set(todos);
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading todos:', error);
+        if (error instanceof HttpErrorResponse) {
+          const { message } = error.error as ApiResponse<any>;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: message,
+          });
+          return;
+        }
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
           detail: 'Failed to load todos',
         });
       },
-    });
+    };
+  }
+
+  /**
+   * Load todos - for manual calls (add, update, delete)
+   */
+  private loadTodos() {
+    this.getTodosObservable('').subscribe(this.resolveSubscription());
   }
 
   addTodo() {

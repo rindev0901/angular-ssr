@@ -4,7 +4,7 @@ interface BaseResponse<T = undefined> {
   statusCode?: number;
 }
 
-interface ApiResponse<T = undefined> extends BaseResponse<T> {
+export interface ApiResponse<T = undefined> extends BaseResponse<T> {
   message: string;
   success: boolean;
 }

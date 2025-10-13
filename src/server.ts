@@ -9,9 +9,10 @@ import morgan from 'morgan';
 import { join } from 'path';
 import { connect, DatabaseError, Result } from 'ts-postgres';
 import { Todo } from './shared/models/todo';
-import { body, validationResult } from 'express-validator';
+import { body, matchedData, query, validationResult } from 'express-validator';
 import { HttpResponse } from './shared/dtos/response';
 import 'dotenv/config';
+import { CreateTodoDto } from '@shared/dtos/todo.create';
 
 function toCamelCase(str: string): string {
   return str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
@@ -112,19 +113,51 @@ app.use(
  * ```
  */
 
-app.get('/api/todos', async (req, res) => {
-  try {
-    const result = await client.query<Todo>(
-      'SELECT * FROM todos WHERE is_deleted = false ORDER BY id ASC'
-    );
+app.get(
+  '/api/todos',
+  query('search').default(''),
+  async (req, res) => {
+    try {
+      const result = validationResult(req);
 
-    const todos = rowsToObjects(result);
-    res.status(200).json(todos);
-  } catch (error) {
-    console.error('Error fetching todos:', error);
-    res.status(500).json({ error: 'Failed to fetch todos' });
+      if (!result.isEmpty()) {
+        const errors = result.array();
+        const message = errors.map((err) => err.msg).join(', ');
+        return res.status(400).json(
+          HttpResponse.toResponse(message, {
+            statusCode: 400,
+            data: errors,
+          })
+        );
+      }
+
+      const { search = '' } = matchedData<{ search: string }>(req);
+
+      // If search is empty, get all todos
+      const queryText =
+        'SELECT * FROM todos WHERE is_deleted = false AND title ILIKE $1 ORDER BY id ASC';
+
+      const queryParams = [`%${search}%`];
+
+      const queryResult = await client.query<Todo>(queryText, queryParams);
+      const todos = rowsToObjects(queryResult);
+
+      return res.status(200).json(todos);
+    } catch (error) {
+      console.error('Error getting todos:', error);
+      if (error instanceof DatabaseError) {
+        return res.status(400).json(
+          HttpResponse.toResponse(error.message, {
+            statusCode: 400,
+            data: error,
+            retCode: error.code,
+          })
+        );
+      }
+      return res.status(500).json(HttpResponse.toResponse('Internal server error'));
+    }
   }
-});
+);
 
 app.delete('/api/todos/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
@@ -151,12 +184,11 @@ app.post(
   async (req, res) => {
     const result = validationResult(req);
     if (result.isEmpty()) {
-      const todo = req.body as Todo;
-
+      const { title, completed, isDeleted } = matchedData<CreateTodoDto>(req);
       try {
         const queryResult = await client.query(
           'INSERT INTO todos (title, completed, is_deleted) VALUES ($1, $2, $3) RETURNING *',
-          [todo.title, todo.completed, todo.isDeleted]
+          [title, completed, isDeleted]
         );
 
         return res.status(201).json(
