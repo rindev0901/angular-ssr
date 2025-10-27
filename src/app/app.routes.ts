@@ -5,6 +5,7 @@ import { Test } from './test/test';
 import { Filter } from './filter/filter';
 import { Register } from './register/register';
 import { Login } from './login/login';
+import { TodoComponent } from './todo/todo';
 
 export const routes: Routes = [
   {
@@ -30,5 +31,9 @@ export const routes: Routes = [
   {
     path: 'login',
     component: Login,
-  }
+  },
+  {
+    path: 'todo/:id',
+    component: TodoComponent,
+  },
 ];

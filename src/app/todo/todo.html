@@ -1,0 +1,189 @@
+<p-toast />
+
+<div class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 py-8 px-4">
+  <div class="max-w-3xl mx-auto">
+    <!-- Header with Back Button -->
+    <div class="mb-6 flex items-center gap-4">
+      <a
+        routerLink="/"
+        class="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 transition-colors"
+      >
+        <i class="pi pi-arrow-left"></i>
+        <span class="font-medium">Back to Todos</span>
+      </a>
+    </div>
+
+    <!-- Todo Detail Card -->
+    @if (todo()) {
+    <div class="bg-white rounded-2xl shadow-xl border border-purple-100 overflow-hidden">
+      <!-- Card Header -->
+      <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6 text-white">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <i class="pi pi-bookmark text-2xl"></i>
+            <h1 class="text-2xl font-bold">Todo Details</h1>
+          </div>
+          @if (!editMode()) {
+          <span
+            [class]="todo()!.completed ? 'bg-green-500' : 'bg-orange-500'"
+            class="px-4 py-2 rounded-full text-sm font-semibold"
+          >
+            {{ todo()!.completed ? 'Completed' : 'Pending' }}
+          </span>
+          }
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <div class="p-8">
+        <!-- Edit Mode -->
+        @if (editMode()) {
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="pi pi-pencil mr-2"></i>Title
+            </label>
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="editTitle"
+              class="w-full"
+              placeholder="Enter todo title"
+            />
+          </div>
+
+          <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+            <p-checkbox [(ngModel)]="editCompleted" [binary]="true" inputId="editCompleted" />
+            <label for="editCompleted" class="font-semibold text-gray-700 cursor-pointer">
+              Mark as completed
+            </label>
+          </div>
+
+          <div class="flex gap-3">
+            <p-button
+              label="Save Changes"
+              icon="pi pi-check"
+              (onClick)="saveTodo()"
+              [loading]="saving()"
+              severity="success"
+            />
+            <p-button
+              label="Cancel"
+              icon="pi pi-times"
+              (onClick)="toggleEditMode()"
+              [disabled]="saving()"
+              severity="secondary"
+              [outlined]="true"
+            />
+          </div>
+        </div>
+        }
+
+        <!-- View Mode -->
+        @if (!editMode()) {
+        <div class="space-y-6">
+          <!-- Title Section -->
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 mt-1">
+              <button
+                (click)="toggleCompleted()"
+                class="flex items-center justify-center w-8 h-8 rounded-full transition-all hover:scale-110"
+                [class]="
+                  todo()!.completed ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                "
+              >
+                <i
+                  [class]="todo()!.completed ? 'pi pi-check-circle' : 'pi pi-circle'"
+                  class="text-xl"
+                ></i>
+              </button>
+            </div>
+            <div class="flex-1">
+              <h2
+                class="text-3xl font-bold text-gray-800 transition-all"
+                [class.line-through]="todo()!.completed"
+                [class.text-gray-400]="todo()!.completed"
+              >
+                {{ todo()!.title }}
+              </h2>
+            </div>
+          </div>
+
+          <!-- Info Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-gray-200">
+            <div class="flex items-center gap-3 p-4 bg-purple-50 rounded-lg">
+              <i class="pi pi-hashtag text-purple-600 text-xl"></i>
+              <div>
+                <div class="text-sm text-gray-600">Todo ID</div>
+                <div class="font-bold text-gray-800">#{{ todo()!.id }}</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
+              <i class="pi pi-info-circle text-blue-600 text-xl"></i>
+              <div>
+                <div class="text-sm text-gray-600">Status</div>
+                <div class="font-bold text-gray-800">
+                  {{ todo()!.completed ? 'Completed' : 'In Progress' }}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
+              <i class="pi pi-calendar-plus text-green-600 text-xl"></i>
+              <div>
+                <div class="text-sm text-gray-600">Created At</div>
+                <div class="font-bold text-gray-800">
+                  {{ todo()!.createdAt | date : 'medium' }}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-4 bg-orange-50 rounded-lg">
+              <i class="pi pi-calendar text-orange-600 text-xl"></i>
+              <div>
+                <div class="text-sm text-gray-600">Updated At</div>
+                <div class="font-bold text-gray-800">
+                  {{ todo()!.updatedAt | date : 'medium' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-3 pt-6 border-t border-gray-200">
+            <p-button
+              label="Edit Todo"
+              icon="pi pi-pencil"
+              (onClick)="toggleEditMode()"
+              severity="primary"
+            />
+            <p-button
+              label="Delete Todo"
+              icon="pi pi-trash"
+              (onClick)="deleteTodo()"
+              severity="danger"
+              [outlined]="true"
+            />
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- Error State -->
+    @if (!todo()) {
+    <div class="bg-white rounded-2xl shadow-xl p-12 text-center border border-red-100">
+      <i class="pi pi-exclamation-triangle text-6xl text-red-500 mb-4"></i>
+      <h2 class="text-2xl font-bold text-gray-800 mb-2">Todo Not Found</h2>
+      <p class="text-gray-600 mb-6">
+        The todo you're looking for doesn't exist or has been deleted.
+      </p>
+      <a routerLink="/" class="inline-flex items-center gap-2">
+        <p-button label="Go Back Home" icon="pi pi-home" />
+      </a>
+    </div>
+    }
+  </div>
+</div>

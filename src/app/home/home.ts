@@ -17,7 +17,8 @@ import { QueryService } from '@app/services/query.service';
 import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, switchMap, timer } from 'rxjs';
 import { ApiResponse } from '@shared/dtos/response';
-import { Meta, Title, } from '@angular/platform-browser';
+import { Meta, Title } from '@angular/platform-browser';
+import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-home',
   templateUrl: './home.html',
@@ -29,6 +30,7 @@ import { Meta, Title, } from '@angular/platform-browser';
     CardModule,
     CheckboxModule,
     InputTextModule,
+    RouterLink,
     ToastModule,
     ChipModule,
     IconFieldModule,

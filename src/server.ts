@@ -13,10 +13,8 @@ import { body, matchedData, query, validationResult } from 'express-validator';
 import { HttpResponse } from './shared/dtos/response';
 import 'dotenv/config';
 import { CreateTodoDto } from '@shared/dtos/todo.create';
-const bcrypt = require('bcrypt');
-const cors = require('cors');
 import session from 'express-session';
-
+import bcrypt from 'bcryptjs';
 // Extend express-session types
 declare module 'express-session' {
   interface SessionData {
@@ -134,12 +132,6 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
 const app = express();
 app.set('trust proxy', 1);
 app.use(express.json());
-app.use(
-  cors({
-    origin: 'http://localhost:4200',
-    credentials: true,
-  })
-);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -403,13 +395,55 @@ app.get('/api/todos', query('search').default(''), async (req, res) => {
       'SELECT * FROM todos WHERE is_deleted = false AND title ILIKE $1 ORDER BY id ASC';
 
     const queryParams = [`%${search}%`];
-
+    await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate delay
     const queryResult = await client.query<Todo>(queryText, queryParams);
     const todos = rowsToObjects(queryResult);
 
     return res.status(200).json(todos);
   } catch (error) {
     console.error('Error getting todos:', error);
+    if (error instanceof DatabaseError) {
+      return res.status(400).json(
+        HttpResponse.toResponse(error.message, {
+          statusCode: 400,
+          data: error,
+          retCode: error.code,
+        })
+      );
+    }
+    return res.status(500).json(HttpResponse.toResponse('Internal server error'));
+  }
+});
+
+app.get('/api/todos/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  if (isNaN(id)) {
+    return res.status(400).json(
+      HttpResponse.toResponse('Invalid todo ID', {
+        statusCode: 400,
+      })
+    );
+  }
+
+  try {
+    const queryResult = await client.query<Todo>(
+      'SELECT * FROM todos WHERE id = $1 AND is_deleted = false',
+      [id]
+    );
+
+    if (queryResult.rows.length === 0) {
+      return res.status(404).json(
+        HttpResponse.toResponse('Todo not found', {
+          statusCode: 404,
+        })
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate delay
+    const todo = rowsToObjects(queryResult)[0];
+    return res.status(200).json(todo);
+  } catch (error) {
+    console.error('Error getting todo:', error);
     if (error instanceof DatabaseError) {
       return res.status(400).json(
         HttpResponse.toResponse(error.message, {
